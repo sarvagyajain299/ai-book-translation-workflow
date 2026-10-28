@@ -1,0 +1,1496 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Create a data table').item.json.id }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "HTMLcontent": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "HTMLcontent"
+          ],
+          "schema": [
+            {
+              "id": "HTMLcontent",
+              "displayName": "HTMLcontent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "chapterFile",
+              "displayName": "chapterFile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        256
+      ],
+      "id": "2c6befa6-4bd6-427d-a1ac-3c4402d9e3e8",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Create a data table').first().json.id }}",
+          "mode": "id"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2c507f3-55ab-4b11-8fec-1f806394b9a6",
+      "name": "Get row(s)",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the previous node\nconst items = $input.all();\n\n// Extract and combine the HTMLcontent fields\nconst combinedHTML = items.map(item => item.json.HTMLcontent).join('');\n\n// Return a single item containing the merged content\nreturn [\n  {\n    json: {\n      combinedHTML: combinedHTML\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        0
+      ],
+      "id": "c8d1e5a5-7968-4581-ab98-305269cb4495",
+      "name": "combineHTML"
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID",
+        "text": "=*English Translator* Execution Started for  {{ $json['chapter name'] }} submitted at {{ $json.Timestamp }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2880,
+        192
+      ],
+      "id": "67a2f1b1-597b-4bc6-a027-21c9786fa0de",
+      "name": "execution started message1",
+      "webhookId": "64674400-3d42-4c51-b0db-ecb0936b85f0",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "telegramApi (set your own)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nreturn $input.last();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3104,
+        192
+      ],
+      "id": "ea9d486b-0dd3-41d9-a788-7566204213f6",
+      "name": "form input1"
+    },
+    {
+      "parameters": {
+        "resource": "fileSearch",
+        "operation": "deleteStore",
+        "fileSearchStoreName": "={{ $('Create a File Search store').first().json.name }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2704,
+        0
+      ],
+      "id": "1eb856df-810d-4921-a635-652040a6f47b",
+      "name": "Delete a File Search store1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "googlePalmApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('form input1').first().json['Chapter File'].split('=').last() }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2928,
+        0
+      ],
+      "id": "6d2c3fa2-38aa-44e7-b6b0-c21a6fc92486",
+      "name": "Delete a file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleDriveOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/{{ $('Upload a file to a File Search store').first().json.documentName }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "force",
+              "value": "true"
+            },
+            {
+              "name": "key",
+              "value": "GEMINI_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2480,
+        0
+      ],
+      "id": "8a463740-3ed5-453f-9605-6539549daa70",
+      "name": "delete file from file search store1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "={{ $('form input1').first().json['chapter name'] }}",
+        "message": "=Here is your google doc:\nhttps://docs.google.com/document/d/{{ $('set documentID , combinedHTML1').item.json.documentID }}/edit?tab=t.0\n\nDocument Name: {{ $('write data to google docs1').item.json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "585037b0-8920-4150-8bb0-e40f95504f4b",
+      "name": "Send a message1",
+      "webhookId": "a3055b30-a145-44f4-9279-738ab0b680f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CREDENTIAL_ID",
+          "name": "gmailOAuth2 (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "929f6d8d-0247-4021-b9b9-00b0b54ab519",
+              "name": "documentID",
+              "value": "={{ $('Create a document1').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "66751f81-8b31-4c4e-a282-155f00f63722",
+              "name": "combinedHtml",
+              "value": "={{ $('combineHTML').item.json.combinedHTML }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "198481a3-8fc3-4293-97bb-0d173d095c1a",
+      "name": "set documentID , combinedHTML1"
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "={{ $('form input1').first().json['chapter name'] }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "f6699549-9ad8-413c-9a9f-ff2144e1797f",
+      "name": "Create a document1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleDocsOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/upload/drive/v3/files/{{ $json.documentID }}?uploadType=media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"text/html\"\n}",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "={{ $json.combinedHtml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "9bb86ee7-f6da-4fac-bc2b-7cb18af722d1",
+      "name": "write data to google docs1",
+      "retryOnFail": true,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleDocsOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Role: You are a specialized Markdown-to-HTML conversion engine. Your sole purpose is to transform Markdown input into clean, semantic, and well-formatted HTML.\n\nInstructions:\n\nNo Prologue/Epilogue: Do not include phrases like \"Here is your HTML\" or \"Sure, I can help.\" Output ONLY the raw HTML code.\n\nStandard Mappings:\n\n# to <h1>, ## to <h2>, etc.\n\n**text** to <strong>text</strong>.\n\n*text* or _text_ to <em>text</em>.\n\n[link](url) to <a href=\"url\">link</a>.\n\nMarkdown lists (- or 1.) to <ul>/<li> or <ol>/<li>.\n\nCode Blocks: Wrap code in <pre><code>...</code></pre>. If a language is specified (e.g., ```python), add it as a class: <code class=\"language-python\">.\n\nParagraphs: Wrap all standalone text blocks in <p> tags. Ensure double line breaks in Markdown result in separate <p> elements.\n\nTables: Convert Markdown tables into standard <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags.\n\nSpecial Characters: Escape HTML entities where necessary (e.g., convert < to &lt; and > to &gt;) specifically inside code blocks to prevent rendering errors.\n\nOutput Format: Return the raw HTML string starting with the first converted element.\n\nmarkdown text: {{ $json.aiOutput }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        192
+      ],
+      "id": "8777bbcd-bd1f-492f-9775-1e40e5bde74a",
+      "name": "convert markdown to html",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "googlePalmApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-4-argon",
+          "mode": "list",
+          "cachedResultName": "models/gemini-4-argon"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $('form input1').item.json.Prompt }}\n\nyou will be provided text in markdown\n\ntext: {{ $('split in slots1').item.json.content }}\n\n\nStrict Rules:\n\nif you encounter a table process it separately and any paragraphs of block of text must be processed separately\n\nwhen process you must not convert block of text into tables\n\nand you must not convert tables into block of text\n\njust give the processed output no statement before it like here is your text\n\nthe connected filestore will have context of the whole chapter\nyou must always use that for context\n\noutput only in markdown\n"
+            }
+          ]
+        },
+        "builtInTools": {
+          "fileSearch": {
+            "fileSearchStoreNames": "=[\"{{ $('Create a File Search store').item.json.name }}\"]"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        192
+      ],
+      "id": "c740c4e0-e0a4-4a2f-aca4-355377c4152f",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "googlePalmApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": "={{ $('form input1').item.json['test '] ? $('form input1').item.json['test '] : ($input.all().length + 100) }}"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        192
+      ],
+      "id": "7973e848-72bb-4036-9a8a-6ec56a05514c",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "resource": "fileSearch",
+        "operation": "uploadToStore",
+        "fileSearchStoreName": "={{ $json.name }}",
+        "displayName": "={{ $json.displayName }}",
+        "inputType": "binary"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -1984,
+        192
+      ],
+      "id": "10a3c942-04a6-421e-9dc3-c00e987cb3eb",
+      "name": "Upload a file to a File Search store",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "googlePalmApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileSearch",
+        "displayName": "={{ $json.filestorename }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -2432,
+        192
+      ],
+      "id": "3338ead3-1353-414b-bbf5-3ae3761531db",
+      "name": "Create a File Search store",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "googlePalmApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('form input1').first().json['chapter name']\n\n// Perform the transformation\nconst filestorename = input.toLowerCase().replace(/\\s+/g, '');\n\n// Return an array of objects as n8n expects\nreturn [\n  {\n    json: {\n      filestorename: filestorename\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2656,
+        192
+      ],
+      "id": "ea98bf00-f190-4683-a653-25d2132d49fc",
+      "name": "get filestorename1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "English Translator(Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 926333405,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit#gid=926333405"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        192
+      ],
+      "id": "66416f26-20b6-4d6d-b8f7-dcaeda9b9fa7",
+      "name": "Google Sheets Trigger",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleSheetsTriggerOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID",
+        "text": "=Processing Slot no {{ $node[\"Loop Over Items1\"].context.currentRunIndex + 1 }} for {{ $('get filestorename1').first().json.filestorename }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "1b4df331-df0e-4f56-8ab8-b88a24182efa",
+      "name": "iteration message1",
+      "webhookId": "8c48610b-cd57-4c66-85c5-e43128f92a8c",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "telegramApi (set your own)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        192
+      ],
+      "id": "8f00d1f7-4735-4a32-9077-6093940eabd4",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data (works for any structure)\nconst inputData = $input.first().json;\n\n// Check if 'pages' exists and is an array\nif (inputData.pages && Array.isArray(inputData.pages)) {\n  const combinedText = inputData.pages\n    .map(page => page.markdown || \"\") // Get markdown or empty string if missing\n    .filter(text => text !== \"\")      // Remove empty pages\n    .join('\\n\\n');                    // Combine with double newlines\n\n  return {\n    combined_markdown: combinedText\n  };\n}\n\n// Fallback if the input doesn't have a 'pages' array\nreturn {\n  error: \"No 'pages' array found in the input data\",\n  combined_markdown: \"\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        192
+      ],
+      "id": "1ca7b8fd-a5fd-41d2-8512-2c9992ceb9ce",
+      "name": "combine markdown1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('form input1').item.json['Chapter File'].split('=').last() }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2208,
+        192
+      ],
+      "id": "c8181cf1-10f6-4131-983a-1d9deb9bd8b1",
+      "name": "download for rag1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleDriveOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('form input1').item.json['Chapter File'].split('=').last() }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1344,
+        192
+      ],
+      "id": "2b68d4f2-1346-4da7-b17b-dd7dae88e0e5",
+      "name": "download for ocr1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleDriveOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get input data\nconst inputData = $('combine markdown1').first().json.combined_markdown || \"\";\n\n// 2. Split by the word \"SLOT\"\n// This creates an array: [TextBeforeSlot, Slot1Content, Slot2Content, ...]\nlet slots = inputData.split(/SLOT/i);\n\n// 3. REMOVE THE FIRST ELEMENT\n// This removes everything that was before the very first \"SLOT\"\nslots.shift();\n\n// 4. Transform to n8n format\n// We filter to remove any empty items to ensure Gemini doesn't get blank inputs\nreturn slots\n    .map(text => text.trim())\n    .filter(text => text.length > 0)\n    .map((content) => {\n        return {\n            json: {\n                content: content\n            }\n        };\n    });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        192
+      ],
+      "id": "f701f56f-ca0c-4d37-b1b5-36d14f789598",
+      "name": "split in slots1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "16406967-aa19-4966-ac23-e1b6ac31381e",
+              "name": "aiOutput",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        192
+      ],
+      "id": "4ce5387b-f058-4f11-8971-095b4a5b8062",
+      "name": "set aiOutput1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a579269-1f97-4624-be4f-411421018089",
+              "name": "output",
+              "value": "={{ $json.formatted_html }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        192
+      ],
+      "id": "6a3ff360-469d-4331-bf0e-4670a7220092",
+      "name": "set output1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This script ensures the HTML from Gemini is clean and \n// reinforces the spacing for Google Docs.\n\nconst htmlContent =  $input.first().json.content.parts[0].text// Change 'output' to your Gemini output key\n\n// Replace any double newlines with double breaks just in case\nlet sanitized = htmlContent.replace(/\\n\\n/g, '<br><br>');\n\n// Ensure paragraph tags have extra breathing room\nsanitized = sanitized.replace(/<\\/p><p>/g, '</p><br><br><p>');\n\nreturn [{\n  json: {\n    formatted_html: sanitized\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        192
+      ],
+      "id": "0bea8530-1fb2-4bad-b717-d9b0619e471d",
+      "name": "clean html code1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "English Translator(Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 187228258,
+          "mode": "list",
+          "cachedResultName": "execution history",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit#gid=187228258"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prompt",
+              "displayName": "Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chapter File",
+              "displayName": "Chapter File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chapter name",
+              "displayName": "chapter name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "test ",
+              "displayName": "test ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3376,
+        0
+      ],
+      "id": "158b4520-b786-4a8e-90f0-75746da73c1b",
+      "name": "append execution history1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleSheetsOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "English Translator(Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 926333405,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit#gid=926333405"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Timestamp",
+              "lookupValue": "={{ $('Google Sheets Trigger').first().json[\"Timestamp\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3152,
+        0
+      ],
+      "id": "74cbe27c-6155-4f5a-b7b4-c408c64ef941",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleSheetsOAuth2Api (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "English Translator(Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 926333405,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/GOOGLE_FILE_ID/edit#gid=926333405"
+        },
+        "startIndex": "={{ $('Get row(s) in sheet1').item.json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3600,
+        0
+      ],
+      "id": "15e056ba-a898-4836-a722-711efe04a6c3",
+      "name": "Delete rows or columns from sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "googleSheetsOAuth2Api (set your own)"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID",
+        "text": "=Execution Completed for {{ $('get filestorename1').first().json.filestorename }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3824,
+        0
+      ],
+      "id": "e4ede492-0395-49fd-945d-8f3700b4da39",
+      "name": "execution Complete Message1",
+      "webhookId": "f5cddcbe-4948-4bac-b82c-72f36d18de39",
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "telegramApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID",
+        "text": "=Processing Complete for {{ $('get filestorename1').first().json.filestorename }}\nNow creating Google Document\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "2c6542f9-e3f1-4efe-925a-13656e2815da",
+      "name": "Creating Document Message1",
+      "webhookId": "f5a67181-9b52-46fd-ba07-6ed1fc94e75c",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "telegramApi (set your own)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID",
+        "text": "=Here is your google doc: ` https://docs.google.com/document/d/{{ $('set documentID , combinedHTML1').item.json.documentID }}/edit?tab=t.0 `\n\nDocument Name: {{ $('write data to google docs1').item.json.name }}\n\nit has also been mailed to YOUR_EMAIL@example.com",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        0
+      ],
+      "id": "be02f439-7bfb-414b-a58d-ac6434888f73",
+      "name": "google doc link message1",
+      "webhookId": "45b3f4a1-2368-48c2-a9f6-ab7c24832d61",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "telegramApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Create a data table').first().json.id }}",
+          "mode": "id"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "gt",
+              "keyValue": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "23db5024-799e-4ae9-b84a-1634458e70f7",
+      "name": "Delete row(s)",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "=CBC{{ $('get filestorename1').item.json.filestorename }}{{ $execution.id }}",
+        "columns": {
+          "column": [
+            {
+              "name": "HTMLcontent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1776,
+        192
+      ],
+      "id": "5031fb8f-bb19-46d7-b6b5-9a8f38435ae9",
+      "name": "Create a data table"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        192
+      ],
+      "id": "2f266894-9318-4e84-8657-d5b105b864ed",
+      "name": "Extract text",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "CREDENTIAL_ID",
+          "name": "mistralCloudApi (set your own)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "AgKDw6LV1JMWo9PX",
+          "mode": "list",
+          "cachedResultName": "workflow execution registry for English Translator",
+          "cachedResultUrl": "/projects/3tciZCkO4dtYHBy3/datatables/AgKDw6LV1JMWo9PX"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "executionID": "={{ $execution.id }}",
+            "tableID": "={{ $json.id }}",
+            "tableName": "={{ $json.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "executionID",
+              "displayName": "executionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tableID",
+              "displayName": "tableID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tableName",
+              "displayName": "tableName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1568,
+        192
+      ],
+      "id": "77d722f8-3e25-4a21-890f-0b331c366f6b",
+      "name": "insert execution id and table name"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "delete",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Create a data table').first().json.name }}",
+          "mode": "name"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        0
+      ],
+      "id": "ec7fa37d-45b1-4c36-b01b-50394de2a9bd",
+      "name": "Delete a data table",
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "combineHTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "combineHTML": {
+      "main": [
+        [
+          {
+            "node": "Creating Document Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "execution started message1": {
+      "main": [
+        [
+          {
+            "node": "get filestorename1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "form input1": {
+      "main": [
+        [
+          {
+            "node": "execution started message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a File Search store1": {
+      "main": [
+        [
+          {
+            "node": "Delete a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete file from file search store1": {
+      "main": [
+        [
+          {
+            "node": "Delete a File Search store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "google doc link message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set documentID , combinedHTML1": {
+      "main": [
+        [
+          {
+            "node": "write data to google docs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document1": {
+      "main": [
+        [
+          {
+            "node": "set documentID , combinedHTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write data to google docs1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert markdown to html": {
+      "main": [
+        [
+          {
+            "node": "clean html code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "set aiOutput1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file to a File Search store": {
+      "main": [
+        [
+          {
+            "node": "Create a data table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a File Search store": {
+      "main": [
+        [
+          {
+            "node": "download for rag1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get filestorename1": {
+      "main": [
+        [
+          {
+            "node": "Create a File Search store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "form input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iteration message1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "iteration message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "combine markdown1": {
+      "main": [
+        [
+          {
+            "node": "split in slots1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download for rag1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file to a File Search store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download for ocr1": {
+      "main": [
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split in slots1": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set aiOutput1": {
+      "main": [
+        [
+          {
+            "node": "convert markdown to html",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set output1": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clean html code1": {
+      "main": [
+        [
+          {
+            "node": "set output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "append execution history1": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "append execution history1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet1": {
+      "main": [
+        [
+          {
+            "node": "execution Complete Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creating Document Message1": {
+      "main": [
+        [
+          {
+            "node": "Create a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google doc link message1": {
+      "main": [
+        [
+          {
+            "node": "Delete row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete row(s)": {
+      "main": [
+        [
+          {
+            "node": "Delete a data table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a data table": {
+      "main": [
+        [
+          {
+            "node": "insert execution id and table name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "combine markdown1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert execution id and table name": {
+      "main": [
+        [
+          {
+            "node": "download for ocr1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a data table": {
+      "main": [
+        [
+          {
+            "node": "delete file from file search store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d78a473b963ef6e8831b016d5a9dff0253240b0ad77c6b2a9df186bc5dd45889"
+  }
+}
